@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Storage To-Do List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex justify-center items-center h-screen">
+    <div class="w-96 bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h2 class="text-xl font-bold mb-4">Random Storage To-Do List</h2>
+        <input id="noteInput" type="text" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white" placeholder="Add a new note...">
+        <button onclick="addNote()" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">Add Note</button>
+        <ul id="noteList" class="mt-4 space-y-2"></ul>
+    </div>
+
+    <script>
+        let notesArray = [];
+        let notesObject = {};
+        let notesMeta = [];
+
+        function getRandomStorageMethod() {
+            const methods = ['localStorage', 'array', 'json'];
+            return methods[Math.floor(Math.random() * methods.length)];
+        }
+
+        function addNote() {
+            const noteInput = document.getElementById('noteInput');
+            const note = noteInput.value.trim();
+            if (!note) return;
+            
+            const storageMethod = getRandomStorageMethod();
+            
+            if (storageMethod === 'localStorage') {
+                let storedNotes = JSON.parse(localStorage.getItem('notes')) || [];
+                storedNotes.push(note);
+                localStorage.setItem('notes', JSON.stringify(storedNotes));
+                notesMeta.push({ note, method: 'Local Storage' });
+            } else if (storageMethod === 'array') {
+                notesArray.push(note);
+                notesMeta.push({ note, method: 'Array' });
+            } else if (storageMethod === 'json') {
+                const key = 'note' + (Object.keys(notesObject).length + 1);
+                notesObject[key] = note;
+                notesMeta.push({ note, method: 'JSON Object' });
+            }
+
+            noteInput.value = '';
+            renderNotes();
+        }
+
+        function renderNotes() {
+            const noteList = document.getElementById('noteList');
+            noteList.innerHTML = '';
+            
+            let storedNotes = JSON.parse(localStorage.getItem('notes')) || [];
+            let allNotes = [...storedNotes, ...notesArray, ...Object.values(notesObject)];
+            
+            allNotes.forEach(note => {
+                const li = document.createElement('li');
+                li.className = 'bg-gray-700 p-2 rounded';
+                li.textContent = note;
+                
+                const meta = notesMeta.find(n => n.note === note);
+                if (meta) {
+                    const storageInfo = document.createElement('p');
+                    storageInfo.className = 'text-xs text-gray-400';
+                    storageInfo.textContent = `Stored in: ${meta.method}`;
+                    li.appendChild(storageInfo);
+                }
+                
+                noteList.appendChild(li);
+            });
+        }
+
+        renderNotes();
+    </script>
+</body>
+</html>
